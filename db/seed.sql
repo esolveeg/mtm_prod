@@ -1,5 +1,12 @@
 USE mtm;
 
+
+# classifications
+INSERT INTO
+    classifications (`name` , `name_ar`)
+VALUES
+    ("Mechanic" , "ميكانيكا"),
+    ("Body & Paint" , "دهان");
 # videos 
 INSERT INTO
     videos(name, url, image )
@@ -9,6 +16,8 @@ VALUES
         'https://www.youtube.com/watch?v=ekgUjyWe1Yc',
         'assets/videos/01.jpeg'
     );
+
+
 
 
 
@@ -71,6 +80,9 @@ VALUES
     ("Gharbiya" , "الغربية"),
     ("Ismailia" , "الإسماعلية"),
     ("Menofia" , "المنوفية");
+
+
+
 # users
 INSERT INTO
     users (
@@ -169,6 +181,23 @@ INSERT INTO brands (
     'بي ام',
     'assets/bmw-logo.jpeg'
 );
+
+
+# types
+INSERT INTO
+    types (`name` , `name_ar` , `brand_id`)
+VALUES
+    ("Qashqai" , "قشقاي" , 1),
+    ("320I" , "320I" , 2);
+# videos 
+INSERT INTO
+    videos(name, url, image )
+VALUES
+    (
+        "World's Coolest Concept Car - Mercedes AVTR",
+        'https://www.youtube.com/watch?v=ekgUjyWe1Yc',
+        'assets/videos/01.jpeg'
+    );
 # centers
 INSERT INTO
     centers (
@@ -176,7 +205,9 @@ INSERT INTO
         location,
         brand_id,
         location_map,
-        working_hours,
+        day_offs,
+        open_time,
+        close_time,
         logo
     )
 VALUES
@@ -185,7 +216,9 @@ VALUES
         '26,734 views Published on 24 June 2015',
         1,
         'https://www.google.com/maps/d/embed?mid=1ksBysRv_ZSolbXZfUY7bqdJDYXM&ehbc=2E312',
-        'every day  10AM : 10PM ',
+        '6,7',
+        '12:00:00',
+        '24:00:00',
         'assets/center-logo.jpg'
     ),
     (
@@ -193,7 +226,9 @@ VALUES
         '26,734 views Published on 24 June 2015',
         2,
         'https://www.google.com/maps/d/embed?mid=1ksBysRv_ZSolbXZfUY7bqdJDYXM&ehbc=2E312',
-        'every day  10AM : 10PM ',
+         '6,7',
+        '12:00:00',
+        '24:00:00',
         'assets/center-logo.jpg'
     ),
     (
@@ -201,10 +236,32 @@ VALUES
         '26,734 views Published on 24 June 2015',
         1,
         'https://www.google.com/maps/d/embed?mid=1ksBysRv_ZSolbXZfUY7bqdJDYXM&ehbc=2E312',
-        'every day  10AM : 10PM ',
+         '6,7',
+        '12:00:00',
+        '24:00:00',
         'assets/center-logo.jpg'
     );
 
-
-
-
+# cars
+INSERT INTO cars (
+    model , 
+    no , 
+    img , 
+    mileage , 
+    user_id , 
+    type_id 
+) VALUES (
+    2022,
+    'اب 123',
+    'assets/cars/nissan.jpg',
+    100,
+    1,
+    1
+) , (
+    2021,
+    'اج123',
+    'assets/cars/bmw.jpg',
+    500,
+    2,
+    2
+);

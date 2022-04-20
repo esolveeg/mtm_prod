@@ -145,29 +145,51 @@ DELIMITER ;
 #----------------------------------------------------------------------#
 # cars
 
-DROP PROCEDURE IF EXISTS CarCreate;
+
+
+DROP PROCEDURE IF EXISTS CarsListByUser;
 
 DELIMITER //
 
-CREATE PROCEDURE CarCreate(
-    IN Ibrand_id INT,
+
+CREATE PROCEDURE CarsListByUser(IN Iid INT) 
+BEGIN
+    SELECT c.id , b.name brand_name,b.name_ar brand_name_ar,t.name type_name,t.name_ar type_name_ar , c.model ,c.no ,c.img ,c.mileage 
+        FROM cars c 
+        JOIN types t ON c.type_id = t.id
+        JOIN brands b ON t.brand_id = b.id 
+        WHERE c.deleted_at IS NULL AND c.user_id =  CASE WHEN Iid = 0 THEN c.user_id ELSE Iid END;
+END //
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS CarsCreate;
+
+DELIMITER //
+
+CREATE PROCEDURE CarsCreate(
+    IN Itype_id INT,
     IN Imodel SMALLINT,
+    IN Ino varchar(10),
     IN Iimg varchar(250),
     IN Imileage INT,
     IN Iuser_id INT
 ) BEGIN
 INSERT INTO
     cars (
-        brand_id,
+        type_id,
         model,
+        no,
         img,
         mileage,
         user_id
     )
 VALUES
     (
-        Itype,
+        Itype_id,
         Imodel,
+        Ino,
         Iimg,
         Imileage,
         Iuser_id
@@ -179,23 +201,56 @@ DELIMITER ;
 
 
 
+DROP PROCEDURE IF EXISTS CarsUpdate;
+
+DELIMITER //
+CREATE PROCEDURE CarsUpdate(
+    IN Iid INT,
+    IN Itype_id INT,
+    IN Imodel SMALLINT,
+    IN Ino VARCHAR(10),
+    IN Iimg VARCHAR(250),
+    IN Imileage VARCHAR(250)
+) BEGIN
+UPDATE
+    cars
+SET
+    type_id = Itype_id,
+    model = Imodel,
+    no = Ino,
+    img = Iimg,
+    mileage = Imileage  
+    WHERE id = Iid;
+
+    SELECT Iid id;
+
+END //
+DELIMITER ;
 
 
 
 
 
-DROP PROCEDURE IF EXISTS CarListByUser;
+DROP PROCEDURE IF EXISTS CarsDelete;
 
 DELIMITER //
 
 
-CREATE PROCEDURE CarListByUser(IN id INT) 
-BEGIN
-    SELECT id , b.name,b.name_ar,b.id ,c.model ,c.img ,c.mileage FROM cars c JOIN brands b ON c.brand_id = b.id WHERE user_id = id;
-END //
+CREATE PROCEDURE CarsDelete(IN id INT) BEGIN
+UPDATE
+    cars c
+SET
+    deleted_at = now()
+WHERE
+    c.id = id;
+    SELECT id;
 
+END //
 DELIMITER ;
 
+
+#----------------------------------------------------------------------#
+# tickets
 
 
 DROP PROCEDURE IF EXISTS TicketListByUser;
@@ -209,44 +264,6 @@ BEGIN
 END//
 DELIMITER ;
 
-
-DROP PROCEDURE IF EXISTS CarDelete;
-
-DELIMITER //
-
-
-CREATE PROCEDURE CarDelete(IN id INT) BEGIN
-UPDATE
-    cars c
-SET
-    deleted_at = now()
-WHERE
-    c.id = id;
-
-END //
-DELIMITER ;
-
-DROP PROCEDURE IF EXISTS CarUpdate;
-
-DELIMITER //
-CREATE PROCEDURE CarUpdate(
-    IN Iid INT,
-    IN Ibrand_id INT,
-    IN Imodel SMALLINT,
-    IN Iimg VARCHAR(250),
-    IN Imileage VARCHAR(250)
-) BEGIN
-UPDATE
-    cars
-SET
-    brandIbrand_id = Ibrand_id,
-    model = Imodel,
-    img = Iimg,
-    mileage = Imileage  
-    WHERE id = Iid;
-
-END //
-DELIMITER ;
 
 
 #-------------------------------------------------------------------#
@@ -647,7 +664,9 @@ DROP PROCEDURE IF EXISTS CentersById;
 DELIMITER //
 CREATE  PROCEDURE `CentersById`(IN Iid INT)
 BEGIN
-    SELECT c.id,c.name,c.brand_id ,b.name, c.location,c.location_map,c.working_hours,c.logo from centers c JOIN brands b ON c.brand_id = b.id WHERE c.deleted_at IS NULL AND c.id = Iid;
+    SELECT c.id,c.name,c.brand_id ,b.name, c.location,c.location_map,c.day_offs,c.open_time , c.close_time ,c.logo from 
+    centers c JOIN brands b ON c.brand_id = b.id 
+    WHERE c.deleted_at IS NULL AND c.id = Iid;
 END//
 DELIMITER ;
 DROP PROCEDURE IF EXISTS CentersListAll;
@@ -655,7 +674,7 @@ DROP PROCEDURE IF EXISTS CentersListAll;
 DELIMITER //
 CREATE  PROCEDURE `CentersListAll`()
 BEGIN
-    SELECT id,name,location,location_map,working_hours,logo from centers WHERE deleted_at IS NULL;
+    SELECT c.id,c.name,c.location,c.location_map,c.day_offs,c.open_time , c.close_time ,c.logo from centers c WHERE c.deleted_at IS NULL;
 END//
 DELIMITER ;
 
@@ -668,7 +687,9 @@ CREATE  PROCEDURE `CentersCreate`(
     Iname VARCHAR(250),
     Ilocation VARCHAR(250),
     Ilocation_map VARCHAR(250),
-    Iworking_hours VARCHAR(250),
+    Iday_offs VARCHAR(10),
+    Iopen_time TIME,
+    Iclose_time TIME,
     Ibrand_id INT,
     Ilogo VARCHAR(250)
 )
@@ -677,14 +698,18 @@ BEGIN
         name,
         location,
         location_map,
-        working_hours,
+        day_offs,
+        open_time,
+        close_time,
         brand_id,
         logo
     ) VALUES (
         Iname,
         Ilocation,
         Ilocation_map,
-        Iworking_hours,
+        Iday_offs,
+        Iopen_time,
+        Iclose_time,
         Ibrand_id,
         Ilogo
     );
@@ -692,6 +717,8 @@ BEGIN
     SELECT LAST_INSERT_ID() id;
 END//
 DELIMITER ;
+
+
 
 DROP PROCEDURE IF EXISTS CentersUpdate;
 
@@ -701,7 +728,9 @@ CREATE  PROCEDURE `CentersUpdate`(
     Iname VARCHAR(250),
     Ilocation VARCHAR(250),
     Ilocation_map VARCHAR(250),
-    Iworking_hours VARCHAR(250),
+    Iday_offs VARCHAR(10),
+    Iopen_time TIME,
+    Iclose_time TIME,
     Ibrand_id INT,
     Ilogo VARCHAR(250)
 )
@@ -710,13 +739,97 @@ UPDATE centers
     SET name = Iname,
         location = Ilocation,
         location_map = Ilocation_map,
-        working_hours = Iworking_hours,
+        day_offs = Iday_offs,
+        open_time = Iopen_time,
+        close_time = Iclose_time,
         brand_id = Ibrand_id,
         logo = Ilogo
     WHERE id = Iid;
 
     SELECT Iid;
 END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS CentersAttachBrand;
+
+DELIMITER //
+CREATE  PROCEDURE `CentersAttachBrand`(
+    Ibrand_id INT,
+    Icenter_id INT
+)
+BEGIN
+    INSERT INTO center_brands (
+        brand_id,
+        center_id
+    ) VALUES (
+        Ibrand_id,
+        Icenter_id
+    );
+
+    SELECT LAST_INSERT_ID() id;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS CentersDetachBrand;
+
+DELIMITER //
+CREATE  PROCEDURE `CentersDetachBrand`(Iid INT)
+BEGIN
+    DELETE FROM center_brands WHERE id = Iid;
+
+    SELECT LAST_INSERT_ID() id;
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS CentersAttachClassfication;
+
+DELIMITER //
+CREATE  PROCEDURE `CentersAttachClassfication`(
+    Iclassfication_id INT,
+    Icenter_id INT
+)
+BEGIN
+    INSERT INTO center_classfications (
+        classfication_id,
+        center_id
+    ) VALUES (
+        Iclassfication_id,
+        Icenter_id
+    );
+
+    SELECT LAST_INSERT_ID() id;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS CentersDetachClassfication;
+
+DELIMITER //
+CREATE  PROCEDURE `CentersDetachClassfication`(
+    Iid INT
+)
+BEGIN
+    DELETE FROM center_classfications WHERE id = Iid;
+
+    SELECT Iid;
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS CentersDelete;
+
+DELIMITER //
+
+CREATE PROCEDURE CentersDelete(IN id INT) BEGIN
+UPDATE
+    centers c
+SET
+    deleted_at = now()
+WHERE
+    c.id = id;
+
+    SELECT id;
+END //
 DELIMITER ;
 
 # brands
@@ -803,17 +916,146 @@ BEGIN
 END//
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS CentersDelete;
+
+
+
+# classifications
+
+DROP PROCEDURE IF EXISTS ClassificationsFind;
 
 DELIMITER //
 
-CREATE PROCEDURE CentersDelete(IN id INT) BEGIN
+CREATE PROCEDURE ClassificationsFind(IN Iid INT) 
+BEGIN
+    SELECT id , name , name_ar FROM classifications WHERE deleted_at IS NULL AND id = Iid;
+END //
+DELIMITER ;
+DROP PROCEDURE IF EXISTS ClassificationsListAll;
+
+DELIMITER //
+
+CREATE PROCEDURE ClassificationsListAll() 
+BEGIN
+    SELECT id , name , name_ar FROM classifications WHERE deleted_at IS NULL;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS ClassificationsCreate;
+
+DELIMITER //
+
+CREATE PROCEDURE ClassificationsCreate(IN Iname VARCHAR(250) , IN Iname_ar VARCHAR(250) ) 
+BEGIN
+    INSERT INTO classifications (name , name_ar) VALUES (Iname ,Iname_ar);
+
+    SELECT LAST_INSERT_ID() id;
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS ClassificationsUpdate;
+
+
+DELIMITER //
+
+CREATE PROCEDURE ClassificationsUpdate(IN Iid INT , IN Iname VARCHAR(250) , IN Iname_ar VARCHAR(250) ) 
+BEGIN
+    UPDATE classifications SET name = Iname , name_ar =Iname_ar WHERE id = Iid;
+    SELECT Iid id;
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS ClassificationsDelete;
+DELIMITER //
+
+CREATE PROCEDURE ClassificationsDelete(IN id INT) BEGIN
 UPDATE
-    centers c
+    classifications c
 SET
     deleted_at = now()
 WHERE
     c.id = id;
+
+    SELECT  id;
+
 END //
 DELIMITER ;
+
+
+
+
+
+# classifications
+
+
+DROP PROCEDURE IF EXISTS TypesFind;
+
+DELIMITER //
+
+CREATE PROCEDURE TypesFind(IN Iid INT) 
+BEGIN
+    SELECT t.id , t.name , t.name_ar , b.name brand_name , b.id brand_id 
+    FROM types t 
+    JOIN brands b ON t.brand_id = b.id 
+    WHERE t.deleted_at IS NULL 
+    AND t.id  = Iid;
+END //
+DELIMITER ;
+DROP PROCEDURE IF EXISTS TypesListByBrand;
+
+DELIMITER //
+
+CREATE PROCEDURE TypesListByBrand(IN BrandId INT) 
+BEGIN
+    SELECT t.id , t.name , t.name_ar , b.name brand_name , b.id brand_id 
+    FROM types t 
+    JOIN brands b ON t.brand_id = b.id 
+    WHERE t.deleted_at IS NULL 
+    AND b.id  =  CASE WHEN BrandId = 0 THEN b.id ELSE BrandId END;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS TypesCreate;
+
+DELIMITER //
+
+CREATE PROCEDURE TypesCreate(IN Iname VARCHAR(250) , IN Iname_ar VARCHAR(250) , IN Ibrand_id INT ) 
+BEGIN
+    INSERT INTO types (name , name_ar , brand_id) VALUES (Iname ,Iname_ar , Ibrand_id);
+
+    SELECT LAST_INSERT_ID() id;
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS TypesUpdate;
+
+
+DELIMITER //
+
+CREATE PROCEDURE TypesUpdate(IN Iid INT , IN Iname VARCHAR(250) , IN Iname_ar VARCHAR(250) , IN Ibrand_id INT) 
+BEGIN
+    UPDATE types SET name = Iname , name_ar = Iname_ar , brand_id = Ibrand_id WHERE id = Iid;
+    SELECT Iid id;
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS TypesDelete;
+DELIMITER //
+
+CREATE PROCEDURE TypesDelete(IN id INT) BEGIN
+UPDATE
+    types t
+SET
+    deleted_at = now()
+WHERE
+    t.id = id;
+
+    SELECT  id;
+
+END //
+DELIMITER ;
+
 

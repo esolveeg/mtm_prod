@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"shab/config"
+	"mtm/config"
 
 	"github.com/jinzhu/gorm"
 	_ "gorm.io/driver/mysql"

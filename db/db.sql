@@ -10,7 +10,21 @@ DROP TABLE IF EXISTS cities;
 CREATE TABLE cities(
     id INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(250),
-    `name_ar` VARCHAR(250)
+    `name_ar` VARCHAR(250),
+    `deleted_at` datetime
+) ENGINE = INNODB;
+
+
+
+
+
+DROP TABLE IF EXISTS classifications;
+
+CREATE TABLE classifications(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(250),
+    `name_ar` VARCHAR(250),
+    `deleted_at` datetime
 ) ENGINE = INNODB;
 
 
@@ -27,6 +41,17 @@ CREATE TABLE brands(
 
 DROP TABLE IF EXISTS consultunts;
 
+
+DROP TABLE IF EXISTS types;
+
+CREATE TABLE types(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(250),
+    `name_ar` VARCHAR(250),
+    brand_id INT,
+    CONSTRAINT fk_user_brand FOREIGN KEY(brand_id) REFERENCES brands(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    `deleted_at` datetime
+) ENGINE = INNODB;
 
 
 DROP TABLE IF EXISTS users;
@@ -56,12 +81,40 @@ CREATE TABLE centers(
     `name` VARCHAR(250) NOT NULL,
     `location` VARCHAR(250) NOT NULL,
     `location_map` VARCHAR(250) NOT NULL,
-    `working_hours` VARCHAR(250) NOT NULL,
+    `day_offs` VARCHAR(10) NOT NULL,
+    `open_time` TIME NOT NULL,
+    `close_time` TIME NOT NULL,
     brand_id INT NOT NULL,
     CONSTRAINT fk_center_brand FOREIGN KEY(brand_id) REFERENCES brands(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     `logo` VARCHAR(250) NOT NULL,
     `created_at` datetime DEFAULT now(),
     `deleted_at` datetime
+) ENGINE = INNODB;
+
+
+
+
+
+
+DROP TABLE IF EXISTS center_brands;
+
+CREATE TABLE center_brands(
+    brand_id INT NOT NULL,
+    CONSTRAINT fk_center_brands_brand FOREIGN KEY(brand_id) REFERENCES brands(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    center_id INT NOT NULL,
+    CONSTRAINT fk_center_brands_center FOREIGN KEY(center_id) REFERENCES centers(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+    
+) ENGINE = INNODB;
+
+
+
+DROP TABLE IF EXISTS center_classifications;
+
+CREATE TABLE center_classifications(
+    calssification_id INT NOT NULL,
+    CONSTRAINT fk_center_classifications_brand FOREIGN KEY(calssification_id) REFERENCES classifications(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    center_id INT NOT NULL,
+    CONSTRAINT fk_center_classifications_center FOREIGN KEY(center_id) REFERENCES centers(id) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = INNODB;
 
 
@@ -85,12 +138,13 @@ DROP TABLE IF EXISTS cars;
 CREATE TABLE cars(
     id INT AUTO_INCREMENT PRIMARY KEY,
     `model` SMALLINT,
-    `img` VARCHAR(300) DEFAULT "assets/members/default-car.png",
+    `img` VARCHAR(300) DEFAULT "assets/cars/default.png",
     `mileage` INT,
+    `no` VARCHAR(10),
     user_id INT,
     CONSTRAINT fk_car_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    brand_id INT,
-    CONSTRAINT fk_car_brand FOREIGN KEY(brand_id) REFERENCES brands(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    type_id INT,
+    CONSTRAINT fk_car_type FOREIGN KEY(type_id) REFERENCES types(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     `created_at` datetime DEFAULT now(),
     `deleted_at` datetime
 ) ENGINE = INNODB;
