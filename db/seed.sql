@@ -122,7 +122,7 @@ VALUES
         'admin',
         'admin@mtm.com',
         'assets/members/female-02.jpg',
-        '123456',
+        'mtm123456',
         '01010101013',
         1
     )
